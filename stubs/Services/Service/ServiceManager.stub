@@ -1,0 +1,89 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Contracts\Foundation\Application;
+use InvalidArgumentException;
+
+class {{ class }}Manager
+{
+    protected array $controllers = [];
+
+    protected $customCreators = [];
+
+    public function __construct(protected Application $app)
+    {
+    }
+
+    public function controller($name = null): \App\Contracts\{{ class }}\Repository
+    {
+        $name = $name ?: $this->getDefaultDriver();
+
+        return $this->controllers[$name] = $this->get($name);
+    }
+
+    public function driver($driver = null): \App\Contracts\{{ class }}\Repository
+    {
+        return $this->controller($driver);
+    }
+
+    protected function get($name): \App\Contracts\{{ class }}\Repository
+    {
+        return $this->controllers[$name] ?? $this->resolve($name);
+    }
+
+    protected function resolve($name): \App\Contracts\{{ class }}\Repository
+    {
+        $config = $this->getConfig($name);
+
+        if (is_null($config)) {
+            throw new InvalidArgumentException("{{ class }} controller [{$name}] is not defined.");
+        }
+
+        if (isset($this->customCreators[$config['driver']])) {
+            return $this->callCustomCreator($config);
+        } else {
+            $driverMethod = 'create'.ucfirst($config['driver']).'Driver';
+
+            if (method_exists($this, $driverMethod)) {
+                return $this->{$driverMethod}($config);
+            } else {
+                throw new InvalidArgumentException("Driver [{$config['driver']}] is not supported.");
+            }
+        }
+    }
+
+    public function getDefaultDriver(): string
+    {
+        return $this->app['config']['social-network.default'];
+    }
+
+    public function setDefaultDriver(string $name): void
+    {
+        $this->app['config']['social-network.default'] = $name;
+    }
+
+    protected function create{{ class }}Driver(array $config): Repository
+    {
+        return new Repository(new {{ class }}($config));
+    }
+
+    protected function callCustomCreator(array $config): mixed
+    {
+        return $this->customCreators[$config['driver']]($this->app, $config);
+    }
+
+    protected function getConfig($name): ?array
+    {
+        if (! is_null($name) && $name !== 'null') {
+            return $this->app['config']["social-network.networks.{$name}"];
+        }
+
+        return ['driver' => 'null'];
+    }
+
+    public function __call($method, $parameters)
+    {
+        return $this->controller()->$method(...$parameters);
+    }
+}

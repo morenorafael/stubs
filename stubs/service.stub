@@ -1,0 +1,7 @@
+<?php
+
+return [
+
+    'key_example' => env('SERVICE_KEY_EXAMPLE'),
+
+];

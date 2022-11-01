@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Providers;
+
+use App\Services\{{ class }}\{{ class }}Manager;
+use Illuminate\Contracts\Support\DeferrableProvider;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\ServiceProvider;
+
+class {{ class }}ServiceProvider extends ServiceProvider implements DeferrableProvider
+{
+    /**
+     * Register services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->app->bind('{{ key }}', fn(Application $app) => new {{ class }}Manager($app));
+
+        $this->app->bind('{{ key }}.controller', fn (Application $app) => $app['{{ key }}']->driver());
+    }
+
+    /**
+     * Bootstrap services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        //
+    }
+
+    public function provides()
+    {
+        return [
+            '{{ key }}', '{{ key }}.controller',
+        ];
+    }
+}

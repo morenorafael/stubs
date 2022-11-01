@@ -1,0 +1,12 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ interface }};
+
+class Repository implements {{ alias }}
+{
+    public function __construct(protected {{ alias }} $repository)
+    {
+    }
+}
